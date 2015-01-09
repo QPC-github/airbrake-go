@@ -64,7 +64,7 @@ func TestShorten(t *testing.T) {
 		{"github.com/Shopify/reportifydb.*Handler.AdminQuery·fm", "reportifydb.*Handler.AdminQuery.fm"},
 	} {
 		if result := shorten(sample.in); result != sample.out {
-			t.Fatalf("expected: %s got: %s", sample.out, result)
+			t.Errorf("expected: %s got: %s", sample.out, result)
 		}
 	}
 }
@@ -86,7 +86,7 @@ func TestLocate(t *testing.T) {
 		},
 	} {
 		if result := locate(sample.in); result != sample.out {
-			t.Fatalf("expected: %s got: %s", sample.out, result)
+			t.Errorf("expected: %s got: %s", sample.out, result)
 		}
 	}
 }
@@ -94,7 +94,7 @@ func TestLocate(t *testing.T) {
 // Make sure we match https://help.airbrake.io/kb/api-2/notifier-api-version-23
 func TestTemplateV2(t *testing.T) {
 	var p map[string]interface{}
-	request, _ := http.NewRequest("GET", "/query?t=xxx&q=SHOW+x+BY+y+FROM+z&key=sesame&timezone=", nil)
+	request, _ := http.NewRequest("GET", "/query?t=xxx&q=SHOW+x+BY+y+FROM+z&kEy=sesame&timezone=", nil)
 	request.Header.Set("Host", "Zulu")
 	request.Header.Set("Keep_Secret", "Sesame")
 	PrettyParams = true
@@ -126,7 +126,7 @@ func TestTemplateV2(t *testing.T) {
 	// Render the params.
 	var b bytes.Buffer
 	if err := tmpl.Execute(&b, p); err != nil {
-		t.Fatalf("Template error: %s", err)
+		t.Errorf("Template error: %s", err)
 	}
 
 	// Validate the <error> node.
@@ -135,13 +135,13 @@ func TestTemplateV2(t *testing.T) {
     <class>*errors.errorString</class>
     <message>Boom!</message>
     <backtrace>` {
-		t.Fatal(chunk)
+		t.Error(chunk)
 	}
 
 	// Validate the <request> node.
 	chunk = regexp.MustCompile(`(?s)<request>.*</request>`).FindString(b.String())
 	if chunk != `<request>
-    <url>/query?t=xxx&amp;q=SHOW+x+BY+y+FROM+z&amp;key=sesame&amp;timezone=</url>
+    <url>/query?t=xxx&amp;q=SHOW+x+BY+y+FROM+z&amp;kEy=sesame&amp;timezone=</url>
     <component></component>
     <action></action>
     <params>
@@ -156,6 +156,6 @@ func TestTemplateV2(t *testing.T) {
       <var key="REQUEST_PROTOCOL">HTTP/1.1</var>
     </cgi-data>
   </request>` {
-		t.Fatal(chunk)
+		t.Error(chunk)
 	}
 }

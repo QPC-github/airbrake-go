@@ -39,7 +39,7 @@ var (
 	// is to use the -X linker flag. (see https://golang.org/cmd/ld)
 	AppVersion = ""
 
-	sensitive     = regexp.MustCompile(`password|token|secret|key`)
+	sensitive     = regexp.MustCompile(`(?i)password|token|secret|key`)
 	badResponse   = errors.New("Bad response")
 	apiKeyMissing = errors.New("Please set the airbrake.ApiKey before doing calls")
 	tmpl          = template.Must(template.New("error").Parse(source))
