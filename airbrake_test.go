@@ -55,10 +55,46 @@ func TestNotify(t *testing.T) {
 	time.Sleep(1e9)
 }
 
+func TestShorten(t *testing.T) {
+	for _, sample := range []struct{ in, out string }{
+		{"net/http.func·011", "http.func.011"},
+		{"runtime.panic", "runtime.panic"},
+		{"github.com/tobi/airbrake-go.CapturePanic", "airbrake-go.CapturePanic"},
+		{"github.com/Shopify/reportifydb.(*Partition).view", "reportifydb.(*Partition).view"},
+		{"github.com/Shopify/reportifydb.*Handler.AdminQuery·fm", "reportifydb.*Handler.AdminQuery.fm"},
+	} {
+		if result := shorten(sample.in); result != sample.out {
+			t.Errorf("expected: %s got: %s", sample.out, result)
+		}
+	}
+}
+
+func TestLocate(t *testing.T) {
+	RootPackage = "github.com/Shopify/reportifydb"
+	for _, sample := range []struct{ in, out string }{
+		{"/home/vagrant/src/go/src/github.com/Shopify/reportifydb/shopifyql/executor.go",
+			"[PROJECT_ROOT]/shopifyql/executor.go",
+		},
+		{"/home/vagrant/src/go/src/github.com/Shopify/reportifydb/handler_admin.go",
+			"[PROJECT_ROOT]/handler_admin.go",
+		},
+		{"/home/vagrant/src/go/src/github.com/tobi/airbrake-go/airbrake.go",
+			"/home/vagrant/src/go/src/github.com/tobi/airbrake-go/airbrake.go",
+		},
+		{"/usr/local/go/src/pkg/net/http/server.go",
+			"/usr/local/go/src/pkg/net/http/server.go",
+		},
+	} {
+		if result := locate(sample.in); result != sample.out {
+			t.Errorf("expected: %s got: %s", sample.out, result)
+		}
+	}
+}
+
 // Make sure we match https://help.airbrake.io/kb/api-2/notifier-api-version-23
 func TestTemplateV2(t *testing.T) {
 	var p map[string]interface{}
-	request, _ := http.NewRequest("GET", "/query?t=xxx&q=SHOW+x+BY+y+FROM+z&key=sesame&timezone=", nil)
+	request, _ := http.NewRequest("GET", "/query?t=xxx&q=SHOW+x+BY+y+FROM+z&kEy=sesame&timezone=", nil)
 	request.Header.Set("Host", "Zulu")
 	request.Header.Set("Keep_Secret", "Sesame")
 	PrettyParams = true
@@ -90,7 +126,7 @@ func TestTemplateV2(t *testing.T) {
 	// Render the params.
 	var b bytes.Buffer
 	if err := tmpl.Execute(&b, p); err != nil {
-		t.Fatalf("Template error: %s", err)
+		t.Errorf("Template error: %s", err)
 	}
 
 	// Validate the <error> node.
@@ -99,13 +135,13 @@ func TestTemplateV2(t *testing.T) {
     <class>*errors.errorString</class>
     <message>Boom!</message>
     <backtrace>` {
-		t.Fatal(chunk)
+		t.Error(chunk)
 	}
 
 	// Validate the <request> node.
 	chunk = regexp.MustCompile(`(?s)<request>.*</request>`).FindString(b.String())
 	if chunk != `<request>
-    <url>/query?t=xxx&amp;q=SHOW+x+BY+y+FROM+z&amp;key=sesame&amp;timezone=</url>
+    <url>/query?t=xxx&amp;q=SHOW+x+BY+y+FROM+z&amp;kEy=sesame&amp;timezone=</url>
     <component></component>
     <action></action>
     <params>
@@ -115,11 +151,11 @@ func TestTemplateV2(t *testing.T) {
     <cgi-data>
       <var key="?q">SHOW x BY y FROM z</var>
       <var key="?t">xxx</var>
-      <var key="Host">Zulu</var>
-      <var key="Method">GET</var>
-      <var key="Protocol">HTTP/1.1</var>
+      <var key="HTTP_HOST">Zulu</var>
+      <var key="REQUEST_METHOD">GET</var>
+      <var key="REQUEST_PROTOCOL">HTTP/1.1</var>
     </cgi-data>
   </request>` {
-		t.Fatal(chunk)
+		t.Error(chunk)
 	}
 }
