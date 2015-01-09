@@ -227,7 +227,6 @@ const source = `<?xml version="1.0" encoding="UTF-8"?>
     </backtrace>
   </error>{{ with .Request }}
   <request>
-<<<<<<< HEAD
     <url>{{html .URL}}</url>
     <component>{{ .Component }}</component>
     <action>{{ .Action }}</action>
@@ -238,13 +237,6 @@ const source = `<?xml version="1.0" encoding="UTF-8"?>
       <var key="{{ $key }}">{{ $value }}</var>{{ end }}
     </cgi-data>
   </request>{{ end }}
-=======
-    <url>{{ html .URL }}</url>
-    <component/>
-    <action/>
-  </request>
-  {{ end }}
->>>>>>> Remove incomplete http post backgrounding
   <server-environment>
     <project-root>{{ html .Pwd }}</project-root>
     <environment-name>{{ .Environment }}</environment-name>
