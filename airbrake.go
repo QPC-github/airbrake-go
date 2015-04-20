@@ -266,11 +266,9 @@ const source = `<?xml version="1.0" encoding="UTF-8"?>
     <component>{{ .Component }}</component>
     <action>{{ .Action }}</action>
     <params>{{ range $key, $value := .Form }}
-      <var key="{{ $key }}">{{ $value }}</var>{{ end }}
-    </params>
+      <var key="{{ $key }}">{{ $value }}</var>{{ end }}</params>
     <cgi-data>{{ range $key, $value := .Header }}
-      <var key="{{ $key }}">{{ $value }}</var>{{ end }}
-    </cgi-data>
+      <var key="{{ $key }}">{{ $value }}</var>{{ end }}</cgi-data>
   </request>{{ end }}
   <server-environment>
     <project-root>{{ html .Pwd }}</project-root>

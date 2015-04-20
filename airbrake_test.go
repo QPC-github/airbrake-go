@@ -146,15 +146,48 @@ func TestTemplateV2(t *testing.T) {
     <action></action>
     <params>
       <var key="q">SHOW x BY y FROM z</var>
-      <var key="t">xxx</var>
-    </params>
+      <var key="t">xxx</var></params>
     <cgi-data>
       <var key="?q">SHOW x BY y FROM z</var>
       <var key="?t">xxx</var>
       <var key="HTTP_HOST">Zulu</var>
       <var key="REQUEST_METHOD">GET</var>
-      <var key="REQUEST_PROTOCOL">HTTP/1.1</var>
-    </cgi-data>
+      <var key="REQUEST_PROTOCOL">HTTP/1.1</var></cgi-data>
+  </request>` {
+		t.Error(chunk)
+	}
+}
+
+// Make sure we match https://help.airbrake.io/kb/api-2/notifier-api-version-23
+func TestEmptyParams(t *testing.T) {
+	request, _ := http.NewRequest("GET", "/query", nil)
+	var p map[string]interface{}
+	// Trigger and recover a panic, so that we have something to render.
+	func() {
+		defer func() {
+			if r := recover(); r != nil {
+				p = params(r.(error), request)
+			}
+		}()
+		panic(errors.New("Boom!"))
+	}()
+
+	// Render the error.
+	var b bytes.Buffer
+	if err := tmpl.Execute(&b, p); err != nil {
+		t.Errorf("Template error: %s", err)
+	}
+
+	// Validate the <request> node.
+	chunk := regexp.MustCompile(`(?s)<request>.*</request>`).FindString(b.String())
+	if chunk != `<request>
+    <url>/query</url>
+    <component></component>
+    <action></action>
+    <params></params>
+    <cgi-data>
+      <var key="REQUEST_METHOD">GET</var>
+      <var key="REQUEST_PROTOCOL">HTTP/1.1</var></cgi-data>
   </request>` {
 		t.Error(chunk)
 	}
